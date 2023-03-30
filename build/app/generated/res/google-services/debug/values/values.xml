@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">457894194469-80abmdf9c2pgktefkahk7ihuvrg7orej.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">457894194469</string>
+    <string name="google_api_key" translatable="false">AIzaSyAaAXUSGzkJjz2mUt6XW2tdax_W7N9Oj4U</string>
+    <string name="google_app_id" translatable="false">1:457894194469:android:392b52797a7fab78e57ecc</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAaAXUSGzkJjz2mUt6XW2tdax_W7N9Oj4U</string>
+    <string name="google_storage_bucket" translatable="false">sendit-9e674.appspot.com</string>
+    <string name="project_id" translatable="false">sendit-9e674</string>
+</resources>

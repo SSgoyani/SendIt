@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "457894194469",
+    "project_id": "sendit-9e674",
+    "storage_bucket": "sendit-9e674.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457894194469:android:392b52797a7fab78e57ecc",
+        "android_client_info": {
+          "package_name": "com.example.cardone1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "457894194469-80abmdf9c2pgktefkahk7ihuvrg7orej.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaAXUSGzkJjz2mUt6XW2tdax_W7N9Oj4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "457894194469-80abmdf9c2pgktefkahk7ihuvrg7orej.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
