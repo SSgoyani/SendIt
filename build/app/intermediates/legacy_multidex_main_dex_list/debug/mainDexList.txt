@@ -165,6 +165,9 @@ androidx/versionedparcelable/VersionedParcelize.class
 androidx/viewpager/widget/ViewPager$DecorView.class
 androidx/window/core/ExperimentalWindowApi.class
 androidx/window/embedding/SplitRule$LayoutDir.class
+com/baseflow/permissionhandler/PermissionConstants$PermissionGroup.class
+com/baseflow/permissionhandler/PermissionConstants$PermissionStatus.class
+com/baseflow/permissionhandler/PermissionConstants$ServiceStatus.class
 com/bumptech/glide/annotation/Excludes.class
 com/bumptech/glide/annotation/GlideExtension.class
 com/bumptech/glide/annotation/GlideModule.class

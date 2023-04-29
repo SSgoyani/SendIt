@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cardone1/Folder.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -9,6 +10,8 @@ import 'package:cardone1/usermodel.dart';
 import 'package:cardone1/homescreen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as Path;
+import 'package:exif/exif.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'home.dart';
 
 class Search extends StatefulWidget {
@@ -26,6 +29,7 @@ class _SearchState extends State<Search> {
 //  Widget _body = Container();
 
   final picker = ImagePicker();
+  int count = 0;
   XFile? _image;
   XFile? get image => _image;
 
@@ -34,29 +38,40 @@ class _SearchState extends State<Search> {
         await picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
 
     if (pickedFile != null) {
-      setState(
-        () {
-          _image = XFile(pickedFile.path);
-          uploadImage(context);
-        },
-      );
+      setState(() {
+        _image = XFile(pickedFile.path);
+        uploadImage(context);
+      });
     }
   }
 
-  void _loadImages() async {
-    Reference ref = FirebaseStorage.instance.ref().child("${widget.data}");
-
-    // List all items in the folder
-    ListResult result = await ref.listAll();
-
-    List<String> urls = await Future.wait(
-      result.items.map((ref) => ref.getDownloadURL()).toList(),
-    );
-
-    setState(() {
-      imageUrls = urls;
-    });
-  }
+  // Future<void> pickimagewithdate(BuildContext context) async {
+  //   print("hello");
+  //   DateTime current = DateTime.now();
+  //   DateTime old = DateTime.utc(2023, 01, 23);
+  //   final FirebaseFirestore dateupload = FirebaseFirestore.instance;
+  //   final picker = ImagePicker();
+  //   final List<XFile>? selectedImages = await picker.pickMultiImage();
+  //   if (selectedImages != null) {
+  //     for (var i = 0; i < selectedImages.length; i++) {
+  //       File image = File(selectedImages[i].path);
+  //       DateTime cretionDate = image.lastModifiedSync();
+  //       if (cretionDate.isAfter(old) && cretionDate.isBefore(current)) {
+  //         //String fileName = Path.basename(image!.path);
+  //         String imageName =
+  //             'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+  //
+  //         Reference firebaseStorageRef =
+  //             FirebaseStorage.instance.ref().child('${widget.data}/$imageName');
+  //         UploadTask uploadTask = firebaseStorageRef.putFile(File(image!.path));
+  //         TaskSnapshot taskSnapshot = await uploadTask;
+  //         String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+  //         Navigator.pop(context);
+  //         // return downloadUrl;
+  //       }
+  //     }
+  //   }
+  // }
 
   Future uploadImage(BuildContext context) async {
     // Show loading dialog
@@ -82,15 +97,22 @@ class _SearchState extends State<Search> {
         );
       },
     );
-    String fileName = Path.basename(image!.path);
-    Reference firebaseStorageRef =
-        FirebaseStorage.instance.ref().child('${widget.data}/$fileName');
-    UploadTask uploadTask = firebaseStorageRef.putFile(File(image!.path));
-    TaskSnapshot taskSnapshot = await uploadTask;
-    String downloadUrl = await taskSnapshot.ref.getDownloadURL();
-    Navigator.pop(context);
-    _loadImages();
-    return downloadUrl;
+
+    if (_image != null) {
+      String fileName = Path.basename(image!.path);
+      Reference firebaseStorageRef =
+          FirebaseStorage.instance.ref().child('${widget.data}/$fileName');
+      UploadTask uploadTask = firebaseStorageRef.putFile(File(image!.path));
+      TaskSnapshot taskSnapshot = await uploadTask;
+      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      Navigator.pop(context);
+      _loadImages();
+      return downloadUrl;
+    } else {
+      // handle case where _image is null
+      print('Image is null');
+      return null;
+    }
   }
 
   User? user = FirebaseAuth.instance.currentUser;
@@ -149,6 +171,21 @@ class _SearchState extends State<Search> {
         this.documentId = loggedInUser.uid!;
         _loadImages(); // call _loadImages after setting documentId
       });
+    });
+  }
+
+  void _loadImages() async {
+    Reference ref = FirebaseStorage.instance.ref().child("${widget.data}");
+
+    // List all items in the folder
+    ListResult result = await ref.listAll();
+
+    List<String> urls = await Future.wait(
+      result.items.map((ref) => ref.getDownloadURL()).toList(),
+    );
+
+    setState(() {
+      imageUrls = urls;
     });
   }
 
@@ -237,148 +274,171 @@ class _SearchState extends State<Search> {
             ],
           ),
         ),
-        // floatingActionButton: _selectedIndex == -1
-        //     ? null
-        //     : Row(
-        //         mainAxisAlignment: MainAxisAlignment.end,
-        //         children: [
-        //           FloatingActionButton(
-        //             backgroundColor: Colors.cyan,
-        //             onPressed: () {
-        //               showDialog(
-        //                 context: context,
-        //                 builder: (BuildContext context) {
-        //                   return AlertDialog(
-        //                     shape: RoundedRectangleBorder(
-        //                       borderRadius: BorderRadius.circular(20),
-        //                     ),
-        //                     content: Container(
-        //                       height: 130,
-        //                       width: MediaQuery.of(context).size.width / 6,
-        //                       child: Column(
-        //                         mainAxisAlignment: MainAxisAlignment.center,
-        //                         children: [
-        //                           Padding(
-        //                             padding: const EdgeInsets.all(16),
-        //                             child: Text(
-        //                               "Do You Want To Delete This Photo?",
-        //                               style: TextStyle(
-        //                                 fontSize: 18,
-        //                                 fontWeight: FontWeight.bold,
-        //                               ),
-        //                             ),
-        //                           ),
-        //                           Row(
-        //                             mainAxisAlignment:
-        //                                 MainAxisAlignment.spaceEvenly,
-        //                             children: [
-        //                               ElevatedButton(
-        //                                 style: ButtonStyle(
-        //                                   fixedSize:
-        //                                       MaterialStateProperty.all<Size>(
-        //                                     Size(
-        //                                       100,
-        //                                       40,
-        //                                     ),
-        //                                   ),
-        //                                   backgroundColor:
-        //                                       MaterialStateProperty.all<Color>(
-        //                                           Colors.indigo),
-        //                                   shape: MaterialStateProperty.all<
-        //                                       RoundedRectangleBorder>(
-        //                                     RoundedRectangleBorder(
-        //                                       borderRadius:
-        //                                           BorderRadius.circular(18.0),
-        //                                     ),
-        //                                   ),
-        //                                 ),
-        //                                 child: Text(
-        //                                   "Delete",
-        //                                   style: TextStyle(
-        //                                     color: Colors.white,
-        //                                     fontSize: 16,
-        //                                   ),
-        //                                 ),
-        //                                 onPressed: () {
-        //                                   _deleteImage();
-        //                                   Navigator.pop(context);
-        //                                 },
-        //                               ),
-        //                               ElevatedButton(
-        //                                 style: ButtonStyle(
-        //                                   fixedSize:
-        //                                       MaterialStateProperty.all<Size>(
-        //                                     Size(
-        //                                       100,
-        //                                       40,
-        //                                     ), // Set the width and height of the button
-        //                                   ),
-        //                                   backgroundColor:
-        //                                       MaterialStateProperty.all<Color>(
-        //                                           Colors.grey),
-        //                                   shape: MaterialStateProperty.all<
-        //                                       RoundedRectangleBorder>(
-        //                                     RoundedRectangleBorder(
-        //                                       borderRadius:
-        //                                           BorderRadius.circular(18.0),
-        //                                     ),
-        //                                   ),
-        //                                 ),
-        //                                 child: Text(
-        //                                   "Cancel",
-        //                                   style: TextStyle(
-        //                                     color: Colors.white,
-        //                                     fontSize: 16,
-        //                                   ),
-        //                                 ),
-        //                                 onPressed: () {
-        //                                   // Close the dialog
-        //                                   Navigator.pop(context);
-        //                                 },
-        //                               ),
-        //                             ],
-        //                           ),
-        //                         ],
-        //                       ),
-        //                     ),
-        //                   );
-        //                 },
-        //               );
-        //             },
-        //             child: Icon(
-        //               Icons.delete,
-        //               color: Colors.white,
-        //             ),
-        //           ),
-        //           SizedBox(width: 16),
-        //           FloatingActionButton(
-        //             backgroundColor: Colors.cyan,
-        //             onPressed: () {
-        //               setState(() {
-        //                 _selectedIndex = -1;
-        //               });
-        //             },
-        //             child: Icon(
-        //               Icons.close,
-        //               color: Colors.white,
-        //             ),
-        //           ),
-        //         ],
-        //       ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            print('${widget.data}');
-            pickImage(context);
-          },
-          label: const Text(
-            'Upload',
-            style: TextStyle(
-              fontSize: 18,
-            ),
-          ),
-          icon: const Icon(Icons.camera_alt_rounded),
-          backgroundColor: Colors.cyan,
-        ),
+        floatingActionButton: _selectedIndex == -1
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 100,
+                  ),
+                  // FloatingActionButton.extended(
+                  //   onPressed: () {
+                  //     print('${widget.data}');
+                  //     pickimagewithdate(context);
+                  //   },
+                  //   label: const Text('Select date'),
+                  //   icon: const Icon(Icons.camera_alt_rounded),
+                  //   backgroundColor: Colors.cyan,
+                  // ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  FloatingActionButton.extended(
+                    onPressed: () {
+                      print('${widget.data}');
+                      pickImage(context);
+                    },
+                    label: const Text('Upload'),
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    backgroundColor: Colors.cyan,
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FloatingActionButton(
+                    backgroundColor: Colors.cyan,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            content: Container(
+                              height: 130,
+                              width: MediaQuery.of(context).size.width / 6,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Text(
+                                      "Do You Want To Delete This Photo?",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                          fixedSize:
+                                              MaterialStateProperty.all<Size>(
+                                            Size(
+                                              100,
+                                              40,
+                                            ),
+                                          ),
+                                          backgroundColor:
+                                              MaterialStateProperty.all<Color>(
+                                                  Colors.indigo),
+                                          shape: MaterialStateProperty.all<
+                                              RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18.0),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "Delete",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          _deleteImage();
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                          fixedSize:
+                                              MaterialStateProperty.all<Size>(
+                                            Size(
+                                              100,
+                                              40,
+                                            ), // Set the width and height of the button
+                                          ),
+                                          backgroundColor:
+                                              MaterialStateProperty.all<Color>(
+                                                  Colors.grey),
+                                          shape: MaterialStateProperty.all<
+                                              RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18.0),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "Cancel",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          // Close the dialog
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  FloatingActionButton(
+                    backgroundColor: Colors.cyan,
+                    onPressed: () {
+                      launch(imageUrls[_selectedIndex]);
+                    },
+                    child: Icon(
+                      Icons.download,
+                      color: Colors.white,
+                    ),
+                  ),
+                  FloatingActionButton(
+                    backgroundColor: Colors.cyan,
+                    onPressed: () {
+                      setState(() {
+                        _selectedIndex = -1;
+                      });
+                    },
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         extendBodyBehindAppBar: true,
       ),

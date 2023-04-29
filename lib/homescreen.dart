@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cardone1/home.dart';
 import 'package:cardone1/profile.dart';
 import 'package:circle_bottom_navigation_bar/circle_bottom_navigation_bar.dart';
-import 'package:cardone1/search.dart';
+import 'package:cardone1/map.dart';
 import 'package:circle_bottom_navigation_bar/widgets/tab_data.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -16,7 +16,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentPage = 0;
   final List<Widget> _pages = [
     Home(),
-    //Search(),
+    Map(),
     Profile(),
   ];
 
@@ -70,13 +70,13 @@ List<TabData> getTabsData() {
       fontSize: 12,
       fontWeight: FontWeight.bold,
     ),
-    // TabData(
-    //   icon: Icons.drive_folder_upload_outlined,
-    //   iconSize: 25,
-    //   title: 'My Uploads',
-    //   fontSize: 12,
-    //   fontWeight: FontWeight.bold,
-    // ),
+    TabData(
+      icon: Icons.map,
+      iconSize: 25,
+      title: 'Map',
+      fontSize: 12,
+      fontWeight: FontWeight.bold,
+    ),
     TabData(
       icon: Icons.person,
       iconSize: 25,

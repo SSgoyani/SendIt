@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'dart:typed_data';
@@ -11,15 +12,44 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as Path;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:cardone1/usermodel.dart';
 import 'package:cardone1/search.dart';
 import 'Folder.dart';
+import 'package:flutter/services.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
+}
+
+String _counter = "";
+String random = "";
+bool _isRunning = false;
+late Timer _timer;
+const platform = MethodChannel('example.com/channel');
+Future<void> _startAutoUpload() async {
+  _isRunning = true;
+  _timer = Timer.periodic(Duration(seconds: 1), (timer) async {
+    try {
+      // if (DateTime.now().second % 2 == 0) {
+      random = await platform.invokeMethod('autoUpload');
+      print("hhdhdsjhjshjhjadhjdjadhad");
+      print(random);
+      // } else {
+      //   timer.cancel();
+      // }
+    } on PlatformException catch (e) {
+      random = "";
+    }
+
+    print('Changis Khaaaannnnnnnnnnnnnnn');
+    print(random);
+    //Future.delayed(Duration(seconds: 1));
+  });
 }
 
 class _HomeState extends State<Home> {
@@ -29,18 +59,45 @@ class _HomeState extends State<Home> {
   XFile? _image;
   XFile? get image => _image;
 
+  var count = 0;
+  var ans = true;
+  late String cityname;
+  late Position currentposition;
+
   String fid = '';
   String folName = '';
 
-  ValueNotifier<String> myString = ValueNotifier<String>('initialValue');
+  void tracklocation() async {
+    Timer.periodic(Duration(seconds: 3600), (timer) async {
+      await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high)
+          .then((Position position) async {
+        setState(() {
+          currentposition = position;
+        });
 
-  Future<void> deleteDocument(String documentId) async {
-    try {
-      await _firestore.collection('folder').doc(fid).delete();
-      print('Document successfully deleted!');
-    } catch (e) {
-      print('Error deleting document: $e');
-    }
+        //await _getAddressFromLatLng();
+      }).catchError((e) {
+        print(e);
+      });
+    });
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+        currentposition.latitude, currentposition.longitude);
+    setState(() {
+      cityname = placemarks[0].locality!;
+      print("hhddh");
+      print("djshjdsjd");
+      print(cityname);
+    });
+  }
+
+  void getlocationfirsttime() async {
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) async {
+      setState(() {
+        currentposition = position;
+      });
+    });
   }
 
   bool isFidValid() {
@@ -74,6 +131,10 @@ class _HomeState extends State<Home> {
   Future<QuerySnapshot> getdatafromfolder() async {
     QuerySnapshot querySnapshot = await folderCollection.get();
     return querySnapshot;
+  }
+
+  void stopautouploading() {
+    _timer?.cancel();
   }
 
   Stream<DocumentSnapshot> getUserStream() {
@@ -129,13 +190,10 @@ class _HomeState extends State<Home> {
     print('Selected date range: $fromDate - $toDate');
   }
 
-  //String a = "";
   late Stream<QuerySnapshot> _folderstream;
   @override
   void initState() {
     super.initState();
-
-    myString.addListener(_onStringChange);
 
     dbref = FirebaseDatabase.instance.ref().child('users');
     dbrefFolder = FirebaseDatabase.instance.ref().child('folder');
@@ -163,7 +221,6 @@ class _HomeState extends State<Home> {
   @override
   void dispose() {
     _searchController.dispose();
-    myString.removeListener(_onStringChange);
     super.dispose();
   }
 
@@ -201,7 +258,10 @@ class _HomeState extends State<Home> {
               top: 0,
               right: 0,
               child: IconButton(
-                icon: Icon(Icons.delete),
+                icon: Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                ),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -259,8 +319,7 @@ class _HomeState extends State<Home> {
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        deleteDocument(fid);
-                                        print(fid);
+                                        deleteDocument('${document['fid']}');
                                       });
                                       Navigator.pop(context);
                                     },
@@ -338,7 +397,15 @@ class _HomeState extends State<Home> {
     );
   }
 
-  void _onStringChange() {}
+  Future<void> deleteDocument(String fid) async {
+    print(fid);
+    try {
+      await folderCollection.doc(fid).delete();
+      print('Document successfully deleted!');
+    } catch (e) {
+      print('Error deleting document: $e');
+    }
+  }
 
   Future pickImage(BuildContext context) async {
     final pickedFile =
@@ -640,7 +707,6 @@ class _HomeState extends State<Home> {
                               () {
                                 folName = _folderController.text;
                                 fid = folName + "_" + documentId;
-                                createFolder();
                               },
                             );
                             Navigator.pop(context);
@@ -656,7 +722,9 @@ class _HomeState extends State<Home> {
               child: Icon(Icons.upload),
               backgroundColor: Colors.grey[100],
               label: 'Auto Upload',
-              onTap: () {},
+              onTap: () {
+                _startAutoUpload();
+              },
             ),
           ],
         ),
@@ -731,5 +799,45 @@ class _HomeState extends State<Home> {
         "fid": fid,
       },
     );
+  }
+
+  bool var1 = true;
+  Geolocator geolocator = Geolocator();
+  void loactiongetting() async {
+    getlocationfirsttime();
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+        currentposition.latitude, currentposition.longitude);
+    setState(() {
+      count = count + 1;
+      if (count % 2 == 0) {
+        print("hello");
+        print(currentposition.latitude);
+        print(currentposition.longitude);
+
+        cityname = placemarks[0].locality!;
+        print("hhddh");
+        print("djshjdsjd");
+        print(cityname);
+        var1 = false;
+
+        folName = cityname;
+        fid = folName + "_" + documentId;
+        createFolder();
+
+        print("secondtime");
+        print("anotherlocation");
+        print(random);
+      }
+      //tracklocation();
+      //}
+
+      //pickImage(context);
+
+      // if(count%2!=0)
+      //   {
+      //     ans=false;
+      //   }
+      //}
+    });
   }
 }
